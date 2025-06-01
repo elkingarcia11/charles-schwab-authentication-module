@@ -1,6 +1,6 @@
 # Schwab API Authenticator
 
-A Python class for handling Charles Schwab API authentication with fresh token generationthat will be utilized for our trading and analysis bot.
+A Python class for handling Charles Schwab API authentication with fresh token generation every time.
 
 ## Features
 
@@ -58,32 +58,44 @@ SCHWAB_APP_KEY=your_schwab_app_key
 SCHWAB_APP_SECRET=your_schwab_app_secret
 ```
 
-## Usage
+## How to Run
 
-### Basic Usage
+### Method 1: Direct Execution
 
-```python
-from schwab_auth import SchwabAuth
+Run the script directly to get fresh access tokens:
 
-# Create an instance
-schwab_auth = SchwabAuth()
-
-# Get fresh access tokens (will prompt for authentication)
-access_token = schwab_auth.get_valid_access_token()
-
-if access_token:
-    print("Successfully authenticated!")
-    # Use the access token for API calls
-else:
-    print("Authentication failed")
+```bash
+python schwab_auth.py
 ```
 
-### Get Fresh Tokens
+This will:
 
-```python
-# Get fresh tokens (this is what the program always does)
-schwab_auth = SchwabAuth()
-refresh_token = schwab_auth.automated_token_management()
+1. Prompt you to visit the authorization URL
+2. Ask you to paste the redirect URL after authorization
+3. Generate fresh access and refresh tokens
+4. Display the access token for use in your applications
+
+### Expected Output
+
+When you run the program, you'll see:
+
+```
+=== GETTING FRESH TOKENS ===
+Getting new Schwab tokens...
+
+1. Visit this URL: https://api.schwabapi.com/v1/oauth/authorize?client_id=...
+2. Log in and authorize the app
+3. You'll be redirected to a URL that looks like:
+   https://127.0.0.1/?code=LONG_CODE_HERE&session=...
+4. Copy the ENTIRE redirect URL
+
+Paste the full redirect URL here: [YOU PASTE THE URL HERE]
+Extracted code: ABC123...
+Tokens obtained successfully!
+Access Token: eyJ0eXAiOiJKV1QiLCJ...
+Refresh Token: eyJ0eXAiOiJKV1QiLCJ...
+Refresh token saved to schwab_refresh_token.txt
+✅ Tokens obtained successfully!
 ```
 
 ## How It Works
