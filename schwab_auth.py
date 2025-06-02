@@ -6,12 +6,12 @@ import requests
 from datetime import datetime
 from dotenv import load_dotenv
 
-# load .env file to environment
-load_dotenv()
-
 
 class SchwabAuth:
     def __init__(self):
+        # load .env file to environment
+        load_dotenv()
+
         # Your Schwab credentials
         self.APP_KEY = os.getenv('SCHWAB_APP_KEY')
         self.APP_SECRET = os.getenv('SCHWAB_APP_SECRET')
@@ -149,7 +149,8 @@ class SchwabAuth:
             return None
 
         # Get fresh access token
-        access_token = self.refresh_access_token(refresh_token, self.APP_KEY, self.APP_SECRET)
+        access_token = self.refresh_access_token(
+            refresh_token, self.APP_KEY, self.APP_SECRET)
 
         if not access_token:
             print("Failed to get access token")
