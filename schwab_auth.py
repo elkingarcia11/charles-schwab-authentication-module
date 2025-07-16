@@ -6,6 +6,9 @@ import requests
 from datetime import datetime
 from dotenv import load_dotenv
 
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), 'gcs-python-module'))
 from gcs_client import GCSClient
 
 
