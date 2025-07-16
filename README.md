@@ -25,7 +25,7 @@ A Python class for handling Charles Schwab API authentication with fresh token g
 1. Clone this repository:
 
 ```bash
-git clone <repository-url>
+git clone --recursive <repository-url>
 cd schwab_api_authenticator
 ```
 
@@ -53,7 +53,7 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file in the project root:
+4. Create a `.env` file in the project root:
 
 ```env
 SCHWAB_APP_KEY=your_app_key_here
@@ -277,10 +277,17 @@ The class includes comprehensive error handling for:
    - Verify the bucket exists and is accessible
 
 5. **Virtual Environment Issues**
+
    - Make sure you've activated the virtual environment before installing dependencies
    - If you see "command not found" errors, ensure the virtual environment is activated
    - If packages aren't found, try reinstalling: `pip install -r requirements.txt`
    - On Windows, use `venv\Scripts\activate` instead of `source venv/bin/activate`
+
+6. **Git Submodule Issues**
+   - If you see "No module named 'gcs_client'" errors, ensure submodules are initialized
+   - Run `git submodule init && git submodule update` to initialize submodules
+   - If submodules are still missing, try `git submodule update --init --recursive`
+   - Check that the `gcs-python-module/` directory exists and contains `gcs_client.py`
 
 ### Debug Mode
 
