@@ -6,6 +6,8 @@ import requests
 from datetime import datetime
 from dotenv import load_dotenv
 
+from gcs_client import GCSClient
+
 
 class SchwabAuth:
     def __init__(self):
@@ -162,3 +164,6 @@ class SchwabAuth:
 if __name__ == "__main__":
     schwab_auth = SchwabAuth()
     access_token = schwab_auth.get_valid_access_token()
+    print(access_token)
+    gcs_client = GCSClient()
+    gcs_client.upload_file(os.getenv('GCS_BUCKET_NAME'), 'schwab_refresh_token.txt', 'schwab_refresh_token.txt')
