@@ -1,8 +1,10 @@
 import base64
 import os
 import urllib.parse
-import sys
 import requests
+import sys
+import argparse
+from datetime import datetime
 from dotenv import load_dotenv
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'gcs-python-module'))
@@ -26,11 +28,37 @@ class SchwabAuth:
         # Token storage file
         self.REFRESH_TOKEN_FILE = 'schwab_refresh_token.txt'
 
+        # GCS config
+        self.GCS_BUCKET_NAME = os.getenv('GCS_BUCKET_NAME')
+        self.gcs_client = GCSClient() if self.GCS_BUCKET_NAME else None
+
     def save_refresh_token(self, refresh_token):
         """Save refresh token to file"""
         with open(self.REFRESH_TOKEN_FILE, 'w') as f:
             f.write(refresh_token)
         print(f"Refresh token saved to {self.REFRESH_TOKEN_FILE}")
+
+    def load_refresh_token(self):
+        """Load refresh token from file if it exists"""
+        if os.path.exists(self.REFRESH_TOKEN_FILE):
+            with open(self.REFRESH_TOKEN_FILE, 'r') as f:
+                return f.read().strip()
+        return None
+
+    def upload_refresh_token_to_gcs(self):
+        if self.gcs_client and self.GCS_BUCKET_NAME:
+            self.gcs_client.upload_file(self.GCS_BUCKET_NAME, self.REFRESH_TOKEN_FILE, self.REFRESH_TOKEN_FILE)
+
+    def download_refresh_token_from_gcs(self):
+        if self.gcs_client and self.GCS_BUCKET_NAME:
+            print(f"Downloading refresh token from GCS bucket: {self.GCS_BUCKET_NAME}")
+            success = self.gcs_client.download_file(self.GCS_BUCKET_NAME, self.REFRESH_TOKEN_FILE, self.REFRESH_TOKEN_FILE)
+            if success:
+                print(f"Downloaded refresh token to {self.REFRESH_TOKEN_FILE}")
+                return self.load_refresh_token()
+            else:
+                print("Failed to download refresh token from GCS.")
+        return None
 
     def get_authorization_url(self, app_key, redirect_uri):
         """Step 1: Get authorization URL for user login"""
@@ -134,21 +162,27 @@ class SchwabAuth:
 
         if tokens:
             self.save_refresh_token(tokens['refresh_token'])
-            print("✅ Tokens obtained successfully!")
+            self.upload_refresh_token_to_gcs()
+            print("✅ Tokens obtained and uploaded to GCS successfully!")
             return tokens['refresh_token']
         else:
             print("❌ Failed to get tokens")
             return None
 
-    def get_valid_access_token(self):
-        """Get a valid access token, always getting fresh tokens"""
-
-        # Get fresh refresh token
-        refresh_token = self.automated_token_management()
-
-        if not refresh_token:
-            print("No valid refresh token available")
-            return None
+    def get_valid_access_token(self, use_gcs_refresh_token=False):
+        """Get a valid access token, using GCS refresh token if specified"""
+        if use_gcs_refresh_token:
+            refresh_token = self.load_refresh_token()
+            if not refresh_token:
+                refresh_token = self.download_refresh_token_from_gcs()
+            if not refresh_token:
+                print("No valid refresh token available locally or in GCS.")
+                return None
+        else:
+            refresh_token = self.automated_token_management()
+            if not refresh_token:
+                print("No valid refresh token available")
+                return None
 
         # Get fresh access token
         access_token = self.refresh_access_token(
@@ -161,8 +195,28 @@ class SchwabAuth:
         return access_token
 
 
-if __name__ == "__main__":
+def main():
+    parser = argparse.ArgumentParser(description="Schwab API Authenticator")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--authenticate', action='store_true', help='Authenticate locally and upload refresh token to GCS (default)')
+    group.add_argument('--get-access-token', action='store_true', help='Get access token using refresh token from GCS')
+    args = parser.parse_args()
+
     schwab_auth = SchwabAuth()
-    _ = schwab_auth.get_valid_access_token()
-    gcs_client = GCSClient()
-    gcs_client.upload_file(os.getenv('GCS_BUCKET_NAME'), 'schwab_refresh_token.txt', 'schwab_refresh_token.txt')
+
+    if args.get_access_token:
+        access_token = schwab_auth.get_valid_access_token(use_gcs_refresh_token=True)
+        if access_token:
+            print(f"Access Token: {access_token}")
+        else:
+            print("Failed to retrieve access token using GCS refresh token.")
+    else:
+        # Default: authenticate locally and upload refresh token to GCS
+        access_token = schwab_auth.get_valid_access_token(use_gcs_refresh_token=False)
+        if access_token:
+            print(f"Access Token: {access_token}")
+        else:
+            print("Failed to authenticate and upload refresh token.")
+
+if __name__ == "__main__":
+    main()
