@@ -26,7 +26,7 @@ A Python class for handling Charles Schwab API authentication with fresh token g
 
 ```bash
 git clone --recursive <repository-url>
-cd schwab_api_authenticator
+cd schwab-api-authenticator
 ```
 
 2. Create and activate a virtual environment (recommended):
@@ -176,10 +176,8 @@ The system always prompts for fresh token authentication every time you run it. 
 ## File Structure
 
 ```
-schwab_api_authenticator/
+schwab-api-authenticator/
 ├── schwab_auth.py          # Main authentication class
-├── streaming_module.py     # Example streaming module
-├── integration_example.py  # Integration examples
 ├── schwab_refresh_token.txt # Stored refresh token (auto-generated)
 ├── .env                    # Environment variables (you create this)
 ├── .env.example           # Example environment file
@@ -313,57 +311,38 @@ The class includes comprehensive error handling for:
 
 For debugging, you can add print statements or modify the error messages in the class methods.
 
-## Streaming Module Integration
+## Integration Examples
 
-The project includes an example streaming module (`streaming_module.py`) that demonstrates how to integrate with the Schwab authenticator for real-time data streaming:
+### Using the Authenticator in Your Own Modules
 
-### Features
-
-- **Automatic Token Management**: Automatically refreshes access tokens when needed
-- **GCS Integration**: Uses refresh tokens from Google Cloud Storage for seamless operation
-- **Multiple Streaming Modes**: Account data, market data, and continuous streaming
-- **Error Handling**: Robust error handling with fallback authentication
-- **CLI Interface**: Command-line interface for easy testing and usage
-
-### Usage Examples
-
-```bash
-# Stream market data for specific symbols
-python streaming_module.py --symbols AAPL GOOGL TSLA
-
-# Stream account data
-python streaming_module.py --account
-
-# Continuous streaming every 30 seconds
-python streaming_module.py --continuous --interval 30
-
-# Run integration examples
-python integration_example.py
-```
-
-### Integration Patterns
-
-The streaming module demonstrates several integration patterns:
-
-1. **Automatic Token Refresh**: The module automatically gets fresh access tokens when needed
-2. **GCS Fallback**: Uses GCS-stored refresh tokens, with fallback to local authentication
-3. **Error Handling**: Graceful handling of authentication failures
-4. **Programmatic Usage**: Easy integration into larger applications
-
-### Key Integration Points
+The `SchwabAuth` class is designed to be easily integrated into other modules:
 
 ```python
 from schwab_auth import SchwabAuth
 
-# Initialize authenticator
+# Initialize the authenticator
 schwab_auth = SchwabAuth()
 
 # Get access token (automatically uses GCS if available)
 access_token = schwab_auth.get_valid_access_token(use_gcs_refresh_token=True)
 
-# Use token for API calls
-headers = {'Authorization': f'Bearer {access_token}'}
+# Use the token for API calls
+headers = {
+    'Authorization': f'Bearer {access_token}',
+    'Content-Type': 'application/json'
+}
+
+# Make API requests
+import requests
+response = requests.get('https://api.schwabapi.com/v1/accounts', headers=headers)
 ```
+
+### Key Integration Benefits
+
+- **Automatic Token Management**: No need to handle token refresh manually
+- **GCS Integration**: Seamlessly uses cloud-stored refresh tokens
+- **Fallback Authentication**: Gracefully falls back to local authentication if needed
+- **Error Handling**: Built-in error handling for authentication failures
 
 ## Google Cloud Storage Module
 
